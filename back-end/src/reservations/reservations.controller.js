@@ -86,8 +86,14 @@ function validateParams(req, res, next) {
   const close = new Date(`${data.reservation_date}T21:30`);
   const dateParts = data.reservation_date.split('-');
 
-  const reservationDate = new Date(Date.UTC(...dateParts.map((elem, i) => i === 1 ? parseInt(elem)-1:parseInt(elem))))
-  const reservationTime = new Date(`${data.reservation_date}T${data.reservation_time}`)
+  const reservationDate = new Date(Date.UTC(...dateParts.map((elem, i) => i === 1 ? parseInt(elem)-1:parseInt(elem))));
+  const reservationTime = new Date(`${data.reservation_date}T${data.reservation_time}`);
+  const reservationDateTime = new Date(`${req.body.data.reservation_date}T${req.body.data.reservation_time}:00.000`);
+  const todaysDate = new Date();
+
+  if (Date.parse(reservationDateTime) < Date.parse(todaysDate)) {
+    return next({ status: 400, message: "reservation_date must be a future date" });
+  }
 
   if (!reservationDate || reservationDate.toString() === "Invalid Date") {
     return next({ status: 400, message: "reservation_date is invalid" });
@@ -104,10 +110,6 @@ function validateParams(req, res, next) {
 
   if (reservationTime < open || reservationTime > close) {
     return next({ status: 400, message: "reservation_time must fall between 10:30 and 21:30" });
-  }
-
-  if (Date.parse(reservationDate) < Date.parse(new Date())) {
-    return next({ status: 400, message: "reservation_date must be a future date" });
   }
 
   next();
